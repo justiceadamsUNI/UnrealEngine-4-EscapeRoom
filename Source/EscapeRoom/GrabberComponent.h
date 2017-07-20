@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Gameframework/Actor.h"
+#include "PhysicsEngine/PhysicsHandleComponent.h"
+#include "Components/InputComponent.h"
 #include "GrabberComponent.generated.h"
 
 
@@ -25,6 +27,14 @@ protected:
 private:	
 	APlayerController* PawnController;
 
+	UPhysicsHandleComponent* PhysicsHandle = nullptr;
+
+	UInputComponent* InputComponent = nullptr;
+
 	UPROPERTY(EditAnywhere)
 	float DebugVectorLength;
+
+	void Grab();
+
+	void Release();
 };
