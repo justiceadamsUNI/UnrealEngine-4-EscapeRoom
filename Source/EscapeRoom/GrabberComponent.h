@@ -18,7 +18,16 @@ class ESCAPEROOM_API UGrabberComponent : public UActorComponent
 public:	
 	// Sets default values for this component's properties
 	UGrabberComponent();
+
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	
+	void Grab();
+
+	void Release();
+
+	void DrawVectorInWorld(FVector PlayerLocation, FVector LineTraceEnd);
+
+	FHitResult CheckForObjectHit(FVector PlayerLocation, FVector LineTraceEnd);
 
 protected:
 	// Called when the game starts
@@ -34,7 +43,7 @@ private:
 	UPROPERTY(EditAnywhere)
 	float DebugVectorLength;
 
-	void Grab();
+	void FindPhysicsHandle();
 
-	void Release();
+	void SetupInputComponent();
 };

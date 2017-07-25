@@ -14,50 +14,68 @@ UGrabberComponent::UGrabberComponent()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-
-	// ...
 }
-
 
 // Called when the game starts
 void UGrabberComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	PhysicsHandle = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
-	InputComponent = GetOwner()->FindComponentByClass<RUNTIME_GENERATED UInputComponent>();
 	PawnController = GetWorld()->GetFirstPlayerController();
+	FindPhysicsHandle();
+	SetupInputComponent();
+}
 
-	FString  ObjectName = GetOwner()->GetName();
-	UE_LOG(LogTemp, Log, TEXT("GrabberComponent Online: Reporting for Object - %s"), *ObjectName);
-
+void UGrabberComponent::FindPhysicsHandle()
+{
+	PhysicsHandle = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
 	if (!PhysicsHandle)
 	{
-		UE_LOG(LogTemp, Error, TEXT("GrabberComponent ERROR: Can't find PhysicsHandle for object: "), *ObjectName);
+		UE_LOG(LogTemp, Error, TEXT("GrabberComponent ERROR: Can't find PhysicsHandle for object: "), *GetOwner()->GetName());
 	}
+}
 
+void UGrabberComponent::SetupInputComponent()
+{
+	InputComponent = GetOwner()->FindComponentByClass<RUNTIME_GENERATED UInputComponent>();
 	if (!InputComponent)
 	{
-		UE_LOG(LogTemp, Error, TEXT("GrabberComponent ERROR: Can't find InputComponent for object: "), *ObjectName);
+		UE_LOG(LogTemp, Error, TEXT("GrabberComponent ERROR: Can't find InputComponent for object: "), *GetOwner()->GetName());
 		//Bind Input action
-	} else {
+	}
+	else {
 		InputComponent->BindAction("Grab", IE_Pressed, this, &UGrabberComponent::Grab);
 		InputComponent->BindAction("Grab", IE_Released, this, &UGrabberComponent::Release);
-		//ToDo: Bind another action to drop!
 	}
-	
 }
 
 void UGrabberComponent::Grab()
 {
+	// Pick up item
 	UE_LOG(LogTemp, Error, TEXT("GrabberComponent - WE GRABBING BOI "));
+
+	//Get player view point.
+	FVector PlayerViewPointLocation = FVector();
+	FRotator PlayerViewPointRotation = FRotator();
+	PawnController->GetPlayerViewPoint(MUTATE PlayerViewPointLocation, MUTATE PlayerViewPointRotation);
+
+	//Draw Vector in world and check hit status.
+	FVector LineTraceEnd = PlayerViewPointLocation + (PlayerViewPointRotation.Vector() * DebugVectorLength);
+	DrawVectorInWorld(PlayerViewPointLocation, LineTraceEnd);
+	FHitResult LineTraceHit = CheckForObjectHit(PlayerViewPointLocation, LineTraceEnd);
+
+	//See what we hit.
+	if (LineTraceHit.GetActor())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("GrabberComponent Ray Hitting Object: %s"), *LineTraceHit.GetActor()->GetName())
+	}
 }
 
 void UGrabberComponent::Release()
 {
+	// Drop item
 	UE_LOG(LogTemp, Error, TEXT("GrabberComponent - WE RELEASING BOI "));
 }
-
 
 // Called every frame
 void UGrabberComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -69,28 +87,29 @@ void UGrabberComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	FRotator PlayerViewPointRotation = FRotator();
 
 	PawnController->GetPlayerViewPoint(MUTATE PlayerViewPointLocation, MUTATE PlayerViewPointRotation);
-	UE_LOG(LogTemp, Warning, TEXT("GrabberComponent Location: %s, Rotation: %s"), 
-		*PlayerViewPointLocation.ToString(), 
+	UE_LOG(LogTemp, Display, TEXT("GrabberComponent Location: %s, Rotation: %s"),
+		*PlayerViewPointLocation.ToString(),
 		*PlayerViewPointRotation.ToString());
+}
 
-	//Draw Vector in world.
-	FVector LineTraceEnd = PlayerViewPointLocation + (PlayerViewPointRotation.Vector() * DebugVectorLength);
-	DrawDebugLine(GetWorld(), PlayerViewPointLocation, LineTraceEnd, FColor(255, 50, 0), false, 0.0f, 0.0f, 10.0f);
-	
+void UGrabberComponent::DrawVectorInWorld(FVector PlayerLocation, FVector LineTraceEnd)
+{
+	DrawDebugLine(GetWorld(), PlayerLocation, LineTraceEnd, FColor(255, 50, 0), false, 0.0f, 0.0f, 10.0f);
+}
+
+FHitResult UGrabberComponent::CheckForObjectHit(FVector PlayerLocation, FVector LineTraceEnd)
+{
 	//Ray-cast out to reach distance
 	FHitResult LineTraceHit = FHitResult();
 	FCollisionQueryParams TraceParams = FCollisionQueryParams(FName(TEXT("")), false, GetOwner());
+
 	GetWorld()->LineTraceSingleByObjectType(
 		MUTATE LineTraceHit,
-		PlayerViewPointLocation,
+		PlayerLocation,
 		LineTraceEnd,
 		FCollisionObjectQueryParams(ECollisionChannel::ECC_PhysicsBody),
 		TraceParams);
 
-	//See what we hit.
-	if (LineTraceHit.GetActor())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("GrabberComponent Ray Hitting Object: %s"), *LineTraceHit.GetActor()->GetName())
-	}
+	return LineTraceHit;
 }
 
