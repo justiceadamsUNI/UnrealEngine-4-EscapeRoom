@@ -40,10 +40,20 @@ private:
 
 	UInputComponent* InputComponent = nullptr;
 
+	FVector PlayerViewPointLocation;
+
+	FRotator PlayerViewPointRotation;
+
+	FVector LineTraceEnd;
+
 	UPROPERTY(EditAnywhere)
 	float DebugVectorLength;
 
 	void FindPhysicsHandle();
 
 	void SetupInputComponent();
+
+	void UpdatePlayerViewPoint();
+
+	void UpdateGrabbedObjectLocation();
 };

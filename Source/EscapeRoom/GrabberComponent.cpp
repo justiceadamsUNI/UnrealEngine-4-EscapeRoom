@@ -42,9 +42,9 @@ void UGrabberComponent::SetupInputComponent()
 	if (!InputComponent)
 	{
 		UE_LOG(LogTemp, Error, TEXT("GrabberComponent ERROR: Can't find InputComponent for object: "), *GetOwner()->GetName());
-		//Bind Input action
 	}
 	else {
+		// Bind Input Actions
 		InputComponent->BindAction("Grab", IE_Pressed, this, &UGrabberComponent::Grab);
 		InputComponent->BindAction("Grab", IE_Released, this, &UGrabberComponent::Release);
 	}
@@ -52,26 +52,18 @@ void UGrabberComponent::SetupInputComponent()
 
 void UGrabberComponent::Grab()
 {
-	// Pick up item
-	UE_LOG(LogTemp, Error, TEXT("GrabberComponent - WE GRABBING BOI "));
-
-	//Get player view point.
-	FVector PlayerViewPointLocation = FVector();
-	FRotator PlayerViewPointRotation = FRotator();
-	PawnController->GetPlayerViewPoint(MUTATE PlayerViewPointLocation, MUTATE PlayerViewPointRotation);
-
-	//Draw Vector in world and check hit status.
-	FVector LineTraceEnd = PlayerViewPointLocation + (PlayerViewPointRotation.Vector() * DebugVectorLength);
+	UE_LOG(LogTemp, Error, TEXT("GrabberComponent - Attempting to grab object "));
+	
+	UpdatePlayerViewPoint();
 	DrawVectorInWorld(PlayerViewPointLocation, LineTraceEnd);
 	FHitResult LineTraceHit = CheckForObjectHit(PlayerViewPointLocation, LineTraceEnd);
+	AActor* HitActor = LineTraceHit.GetActor();
 
-	//See what we hit.
-	if (LineTraceHit.GetActor())
+	// See what we hit.
+	if (HitActor)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("GrabberComponent Ray Hitting Object: %s"), *LineTraceHit.GetActor()->GetName());
-		//ToDo: Refactor
-		//Pick Up object
-		/*LineTraceHit.GetActor()->SetActorEnableCollision(false);*/
+		UE_LOG(LogTemp, Warning, TEXT("GrabberComponent Ray Hitting Object: %s"), *HitActor->GetName());
+		// Pick Up object
 		PhysicsHandle->GrabComponentAtLocationWithRotation(
 			LineTraceHit.GetComponent(),
 			NAME_None,
@@ -80,32 +72,12 @@ void UGrabberComponent::Grab()
 	}
 }
 
-void UGrabberComponent::Release()
+void UGrabberComponent::UpdatePlayerViewPoint()
 {
-	// Drop item
-	UE_LOG(LogTemp, Error, TEXT("GrabberComponent - WE RELEASING BOI "));
-	PhysicsHandle->ReleaseComponent();
-}
-
-// Called every frame
-void UGrabberComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	//Log player view point.
-	FVector PlayerViewPointLocation = FVector();
-	FRotator PlayerViewPointRotation = FRotator();
-
+	PlayerViewPointLocation = FVector();
+	PlayerViewPointRotation = FRotator();
 	PawnController->GetPlayerViewPoint(MUTATE PlayerViewPointLocation, MUTATE PlayerViewPointRotation);
-	UE_LOG(LogTemp, Display, TEXT("GrabberComponent Location: %s, Rotation: %s"),
-		*PlayerViewPointLocation.ToString(),
-		*PlayerViewPointRotation.ToString());
-
-	FVector LineTraceEnd = PlayerViewPointLocation + (PlayerViewPointRotation.Vector() * DebugVectorLength); //ToDo: Refactor
-	if (PhysicsHandle->GrabbedComponent) {
-		UE_LOG(LogTemp, Warning, TEXT("GrabbedComponent Ray Hitting Object: UPDATING LOCATION"));
-		PhysicsHandle->SetTargetLocation(LineTraceEnd);
-	}
+	LineTraceEnd = PlayerViewPointLocation + (PlayerViewPointRotation.Vector() * DebugVectorLength);
 }
 
 void UGrabberComponent::DrawVectorInWorld(FVector PlayerLocation, FVector LineTraceEnd)
@@ -127,5 +99,33 @@ FHitResult UGrabberComponent::CheckForObjectHit(FVector PlayerLocation, FVector 
 		TraceParams);
 
 	return LineTraceHit;
+}
+
+void UGrabberComponent::Release()
+{
+	// Drop item
+	UE_LOG(LogTemp, Error, TEXT("GrabberComponent - Releasing object"));
+	PhysicsHandle->ReleaseComponent();
+}
+
+// Called every frame
+void UGrabberComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	UpdatePlayerViewPoint();
+	// Log player view point.
+	UE_LOG(LogTemp, Display, TEXT("GrabberComponent Location: %s, Rotation: %s"),
+		*PlayerViewPointLocation.ToString(),
+		*PlayerViewPointRotation.ToString());
+
+	UpdateGrabbedObjectLocation();
+}
+
+void UGrabberComponent::UpdateGrabbedObjectLocation()
+{
+	if (PhysicsHandle->GrabbedComponent) {
+		PhysicsHandle->SetTargetLocation(LineTraceEnd);
+	}
 }
 
