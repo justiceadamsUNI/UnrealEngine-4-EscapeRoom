@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "GrabberComponent.h"
+#include "Components/PrimitiveComponent.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
 #include "DrawDebugHelpers.h"
@@ -67,7 +68,15 @@ void UGrabberComponent::Grab()
 	//See what we hit.
 	if (LineTraceHit.GetActor())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("GrabberComponent Ray Hitting Object: %s"), *LineTraceHit.GetActor()->GetName())
+		UE_LOG(LogTemp, Warning, TEXT("GrabberComponent Ray Hitting Object: %s"), *LineTraceHit.GetActor()->GetName());
+		//ToDo: Refactor
+		//Pick Up object
+		/*LineTraceHit.GetActor()->SetActorEnableCollision(false);*/
+		PhysicsHandle->GrabComponentAtLocationWithRotation(
+			LineTraceHit.GetComponent(),
+			NAME_None,
+			LineTraceHit.GetComponent()->GetOwner()->GetActorLocation(),
+			PlayerViewPointRotation);
 	}
 }
 
@@ -75,6 +84,7 @@ void UGrabberComponent::Release()
 {
 	// Drop item
 	UE_LOG(LogTemp, Error, TEXT("GrabberComponent - WE RELEASING BOI "));
+	PhysicsHandle->ReleaseComponent();
 }
 
 // Called every frame
@@ -90,6 +100,12 @@ void UGrabberComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	UE_LOG(LogTemp, Display, TEXT("GrabberComponent Location: %s, Rotation: %s"),
 		*PlayerViewPointLocation.ToString(),
 		*PlayerViewPointRotation.ToString());
+
+	FVector LineTraceEnd = PlayerViewPointLocation + (PlayerViewPointRotation.Vector() * DebugVectorLength); //ToDo: Refactor
+	if (PhysicsHandle->GrabbedComponent) {
+		UE_LOG(LogTemp, Warning, TEXT("GrabbedComponent Ray Hitting Object: UPDATING LOCATION"));
+		PhysicsHandle->SetTargetLocation(LineTraceEnd);
+	}
 }
 
 void UGrabberComponent::DrawVectorInWorld(FVector PlayerLocation, FVector LineTraceEnd)
