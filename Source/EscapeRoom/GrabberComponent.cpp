@@ -88,17 +88,17 @@ void UGrabberComponent::DrawVectorInWorld(FVector PlayerLocation, FVector LineTr
 FHitResult UGrabberComponent::CheckForObjectHit(FVector PlayerLocation, FVector LineTraceEnd)
 {
 	//Ray-cast out to reach distance
-	FHitResult LineTraceHit = FHitResult();
+	FHitResult HitResult = FHitResult();
 	FCollisionQueryParams TraceParams = FCollisionQueryParams(FName(TEXT("")), false, GetOwner());
 
 	GetWorld()->LineTraceSingleByObjectType(
-		MUTATE LineTraceHit,
+		MUTATE HitResult,
 		PlayerLocation,
 		LineTraceEnd,
 		FCollisionObjectQueryParams(ECollisionChannel::ECC_PhysicsBody),
 		TraceParams);
 
-	return LineTraceHit;
+	return HitResult;
 }
 
 void UGrabberComponent::Release()

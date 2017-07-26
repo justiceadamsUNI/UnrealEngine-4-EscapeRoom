@@ -2,8 +2,10 @@
 
 #include "OpenDoor.h"
 #include "Engine/World.h"
+#include "Components/PrimitiveComponent.h"
 #include "GameFramework/PlayerController.h"
 
+#define MUTATE
 
 // Sets default values for this component's properties
 UOpenDoor::UOpenDoor()
@@ -21,7 +23,6 @@ void UOpenDoor::BeginPlay()
 {
 	Super::BeginPlay();
 
-	ActorThatCanOpen = GetWorld()->GetFirstPlayerController()->GetPawn();
 	Owner = GetOwner();
 }
 
@@ -31,7 +32,7 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	// See if the trigger is hit. If So Open the Door.
-	if (PressurePlate->IsOverlappingActor(ActorThatCanOpen))
+	if (GetTotalMassOfActorsOnPlateInKillograms() > TriggerMaxMassInKg)
 	{
 		OpenDoor();
 		LastDoorOpenTime = GetWorld()->GetTimeSeconds();
@@ -43,6 +44,20 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 		CloseDoor();
 	}
 
+}
+
+float UOpenDoor::GetTotalMassOfActorsOnPlateInKillograms()
+{
+	float TotalMass = 0.0;
+	TArray<AActor*> OverlappingActors;
+	PressurePlate->GetOverlappingActors(MUTATE OverlappingActors);
+
+	for (const AActor* Actor : OverlappingActors)
+	{
+		TotalMass += Actor->FindComponentByClass<UPrimitiveComponent>()->GetMass();
+	}
+
+	return TotalMass;
 }
 
 void UOpenDoor::OpenDoor()
