@@ -32,7 +32,7 @@ void UGrabberComponent::FindPhysicsHandle()
 	PhysicsHandle = GetOwner()->FindComponentByClass<UPhysicsHandleComponent>();
 	if (!PhysicsHandle)
 	{
-		UE_LOG(LogTemp, Error, TEXT("GrabberComponent ERROR: Can't find PhysicsHandle for object: "), *GetOwner()->GetName());
+		UE_LOG(LogTemp, Error, TEXT("GrabberComponent ERROR: Can't find PhysicsHandle for object: %s"), *GetOwner()->GetName());
 	}
 }
 
@@ -41,7 +41,8 @@ void UGrabberComponent::SetupInputComponent()
 	InputComponent = GetOwner()->FindComponentByClass<RUNTIME_GENERATED UInputComponent>();
 	if (!InputComponent)
 	{
-		UE_LOG(LogTemp, Error, TEXT("GrabberComponent ERROR: Can't find InputComponent for object: "), *GetOwner()->GetName());
+		UE_LOG(LogTemp, Error, TEXT("GrabberComponent ERROR: Can't find InputComponent for object: %s"), *GetOwner()->GetName());
+		return;
 	}
 	else {
 		// Bind Input Actions
@@ -53,7 +54,14 @@ void UGrabberComponent::SetupInputComponent()
 void UGrabberComponent::Grab()
 {
 	UE_LOG(LogTemp, Error, TEXT("GrabberComponent - Attempting to grab object "));
-	
+
+	if (PhysicsHandle == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("PhysicsHandle is NULL. Avoided NPE in UUGrabberComponent::Grab() on object:  %s"),
+			*GetOwner()->GetName());
+		return;
+	}
+
 	UpdatePlayerViewPoint();
 	DrawVectorInWorld(PlayerViewPointLocation, LineTraceEnd);
 	FHitResult LineTraceHit = CheckForObjectHit(PlayerViewPointLocation, LineTraceEnd);
@@ -74,6 +82,13 @@ void UGrabberComponent::Grab()
 
 void UGrabberComponent::UpdatePlayerViewPoint()
 {
+	if (PawnController == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Pawncontroller is NULL. Avoided NPE in UGrabberComponent::UpdatePlayerViewPoint() on object:  %s"), 
+			*GetOwner()->GetName());
+		return;
+	}
+
 	PlayerViewPointLocation = FVector();
 	PlayerViewPointRotation = FRotator();
 	PawnController->GetPlayerViewPoint(MUTATE PlayerViewPointLocation, MUTATE PlayerViewPointRotation);
@@ -124,8 +139,14 @@ void UGrabberComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 
 void UGrabberComponent::UpdateGrabbedObjectLocation()
 {
+	if (PhysicsHandle == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("PhysicsHandle is NULL. Avoided NPE in UGrabberComponent::Release() on object:  %s"),
+			*GetOwner()->GetName());
+		return;
+	}
+
 	if (PhysicsHandle->GrabbedComponent) {
 		PhysicsHandle->SetTargetLocation(LineTraceEnd);
 	}
 }
-

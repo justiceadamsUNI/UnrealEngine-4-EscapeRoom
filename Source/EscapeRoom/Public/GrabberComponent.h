@@ -34,7 +34,7 @@ protected:
 	virtual void BeginPlay() override;
 
 private:	
-	APlayerController* PawnController;
+	APlayerController* PawnController = nullptr;
 
 	UPhysicsHandleComponent* PhysicsHandle = nullptr;
 

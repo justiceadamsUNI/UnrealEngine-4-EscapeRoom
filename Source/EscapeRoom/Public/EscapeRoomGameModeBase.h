@@ -13,8 +13,4 @@ UCLASS()
 class ESCAPEROOM_API AEscapeRoomGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
-	
-	
-	
-	
 };

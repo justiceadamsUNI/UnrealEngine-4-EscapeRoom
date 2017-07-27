@@ -48,6 +48,13 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 
 float UOpenDoor::GetTotalMassOfActorsOnPlateInKillograms()
 {
+	if (PressurePlate == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("PressurePlate is NULL. Avoided NPE in  UOpenDoor::GetTotalMassOfActorsOnPlateInKillograms() on object:  %s"),
+			*Owner->GetName());
+		return 0.0f;
+	}
+
 	float TotalMass = 0.0;
 	TArray<AActor*> OverlappingActors;
 	PressurePlate->GetOverlappingActors(MUTATE OverlappingActors);
