@@ -25,6 +25,11 @@ void UGrabberComponent::BeginPlay()
 	PawnController = GetWorld()->GetFirstPlayerController();
 	FindPhysicsHandle();
 	SetupInputComponent();
+
+	if (!PawnController)
+	{
+		UE_LOG(LogTemp, Error, TEXT("GrabberComponent ERROR : Can't find PhysicsHandle for object: %s"), *GetOwner()->GetName());
+	}
 }
 
 void UGrabberComponent::FindPhysicsHandle()
@@ -57,8 +62,6 @@ void UGrabberComponent::Grab()
 
 	if (PhysicsHandle == nullptr)
 	{
-		UE_LOG(LogTemp, Error, TEXT("PhysicsHandle is NULL. Avoided NPE in UUGrabberComponent::Grab() on object:  %s"),
-			*GetOwner()->GetName());
 		return;
 	}
 
@@ -84,8 +87,6 @@ void UGrabberComponent::UpdatePlayerViewPoint()
 {
 	if (PawnController == nullptr)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Pawncontroller is NULL. Avoided NPE in UGrabberComponent::UpdatePlayerViewPoint() on object:  %s"), 
-			*GetOwner()->GetName());
 		return;
 	}
 
@@ -141,8 +142,6 @@ void UGrabberComponent::UpdateGrabbedObjectLocation()
 {
 	if (PhysicsHandle == nullptr)
 	{
-		UE_LOG(LogTemp, Error, TEXT("PhysicsHandle is NULL. Avoided NPE in UGrabberComponent::Release() on object:  %s"),
-			*GetOwner()->GetName());
 		return;
 	}
 

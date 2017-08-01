@@ -24,6 +24,12 @@ void UOpenDoor::BeginPlay()
 	Super::BeginPlay();
 
 	Owner = GetOwner();
+
+	if (PressurePlate == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("OpenDoor.cpp ERROR. PressurePlate is NULL on object:  %s"),
+			*Owner->GetName());
+	}
 }
 
 // Called every frame
@@ -50,8 +56,6 @@ float UOpenDoor::GetTotalMassOfActorsOnPlateInKillograms()
 {
 	if (PressurePlate == nullptr)
 	{
-		UE_LOG(LogTemp, Error, TEXT("PressurePlate is NULL. Avoided NPE in  UOpenDoor::GetTotalMassOfActorsOnPlateInKillograms() on object:  %s"),
-			*Owner->GetName());
 		return 0.0f;
 	}
 
